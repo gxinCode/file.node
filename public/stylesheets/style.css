@@ -1,0 +1,101 @@
+body {
+  padding: 50px;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+a {
+  color: #00B7FF;
+  text-decoration: none;
+}
+
+body.center {
+  text-align:center;
+}
+
+#head_hr {
+  width: 800px;
+  height: 1px;
+  background: rgb(125, 177, 104);
+}
+
+/* Border styles */
+#table_files thead, #table_files tr {
+  border-top-width: 1px;
+  border-top-style: solid;
+  border-top-color: rgb(210, 238, 215);
+}
+
+#table_files {
+  width: 800px;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: rgb(210, 238, 215);
+}
+  
+/* Padding and font style */
+#table_files th {
+  padding: 5px 10px;
+  font-size: 15px;
+  font-family: Verdana;
+  color: rgb(41, 136, 0);
+  background: rgb(224, 255, 231);
+}
+
+#table_files td {
+  padding: 5px 10px;
+  font-size: 13px;
+  font-family: Verdana;
+  color: rgb(125, 177, 104);
+}
+  
+/* Alternating background colors */
+#table_files tr:nth-child(odd) {
+  background: rgb(210, 238, 215);
+}
+#table_files tr:nth-child(even) {
+  background: #FFF;
+}
+
+#upbtn {
+  width: 100px;
+  height: auto;
+  text-align: center;
+  font-size: 15px;
+  color: #339cff;
+  background: rgb(210, 238, 215);
+  float: left;
+  cursor: pointer;
+}
+
+.upload_press_parent {
+  width: 800px; 
+  height: 10px; 
+  border: 2px solid #09F;
+  margin-bottom: 5px;
+}
+
+.upload_press_son {
+  width:0;
+  height:100%; 
+  background-color:#09F; 
+  text-align:center; 
+  line-height:10px; 
+  font-size:20px; 
+  font-weight:bold;
+}
+
+#toolbar {
+  width: 800px;
+  height: auto;
+}
+
+#mkdirdiv {
+  float: right;
+  width: 100px;
+  height: auto;
+  text-align: center;
+  font-size: 15px;
+  color: #339cff;
+  background: rgb(210, 238, 215);
+  cursor: pointer;
+}

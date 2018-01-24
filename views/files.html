@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <title>
+        <%= title %>
+    </title>
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link href="/stylesheets/style.css" rel="stylesheet">
+    <script src="/javascript/jquery-3.2.1.min.js"></script>
+</head>
+<% var UPLOAD_COUNT = 3; //上传任务数 %>
+<body onselectstart="return false;">
+    <h1 id="title">
+        <%= title %>
+    </h1>
+    <h2>
+        <a href="/files">home</a>
+        <% var spstr = path.split('/');
+            var htmlCDir = '/';
+            var temp = '/';
+            for(var k = 0; k < spstr.length; k++) {
+                var ts = spstr[k];
+                if(ts == '')
+                    continue;
+                temp += ts + '/';%>
+            / <a href="/files?dir=<%= temp %>"><%= ts %></a>
+        <% } %>
+    </h2>
+
+    <br>
+    <div id='toolbar'>
+        <% if(admin || conf.upload) { %>
+        <div id="upbtn">上传文件</div>
+        <% } %>
+        <% if(admin || conf.mkdir) { %>
+        <div id="mkdirdiv">新建目录</div>
+        <% } %>
+    </div>
+    <br>
+    <br>
+    <% if(admin || conf.upload) { %>
+    <div id="upframe">
+        <span id="upload_info">(最多可同时上传<%= UPLOAD_COUNT %>个文件)</span><br>
+        <input id="file" type="file" multiple="multiple"/>
+        <button id="upload" type="button">上传</button>
+    </div>
+    <% for(var i = 0; i < UPLOAD_COUNT; i++) { %>
+    <div id="upload_press_parent<%= i %>" class="upload_press_parent">
+        <div id="upload_press_son<%= i %>" class="upload_press_son"></div>
+    </div>
+    <% } %>
+    <% } %>
+
+    <div id="head_hr"></div>
+
+    <table id="table_files">
+        <tr>
+            <th width="50px">类型</th>
+            <th>文件名</th>
+            <th width="120px">大小</th>
+            <% if(admin) { %>
+            <th width="150px">管理</th>
+            <% } %>
+        </tr>
+        
+        <% for(var i=0; i<fileInfos.length; i++) { var info = fileInfos[i]; %>
+            <tr>
+                <td align="center">
+                    <img width="32px" height="32px" src="<%= info.icon %>"/>
+                </td>
+                <td>
+                    <a href="<%= info.path %>">
+                        <%= info.name %>
+                    </a>
+                </td>
+                <td align="right"><%= info.size %></td>
+                <% if(admin) { %>
+                <td>
+                    <a id="aremove<%= i %>">
+                        删除
+                    </a>
+                    <a id="arename<%= i %>">
+                        重命名
+                    </a>
+                </td>
+                <% } %>
+            </tr>
+        <% } %>
+    </table>
+    <p id="countp">共 <%= fileInfos.length %> 项</p>
+    <br>
+    <div>
+        <font color="#FF7123" size=4>
+            <%= Date(Date.now()) %>
+        </font>
+        <a id="getadmin">
+            <% if(admin) { %>退出管理员<% } else {%>管理员<% } %>
+        </a>
+    </div>
+    <div id="endarea"></div>
+
+    <script type="text/javascript">
+        var TH_PATH = "<%= path %>";
+
+        var upCount = 0;
+        var upOkCount = 0;
+        function toUpload(index, progress_index) {
+            console.log('toUpload ' + index);
+            if($('#file')[0].files[index]) {
+                var formData = new FormData();
+                formData.append('file', $('#file')[0].files[index]);
+                formData.append('path', TH_PATH);
+                $.ajax({
+                    url: '/files/upload',
+                    type: 'POST',
+                    cache: false,
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    xhr: function () {
+                        console.log('toUpload create ' + index);
+                        upCount += 1;
+                        $('#upload').hide();
+                        $('#file').hide();
+                        $('#upload_info').html('正在上传(' + upCount + '/' + $('#file')[0].files.length + ')');
+                        function onprogress(event) {
+                            $('#upload_press_parent' + progress_index).show();
+                            var loaded = event.loaded;
+                            var tot = event.total;
+                            var per = (100 * loaded / tot).toFixed(2);
+                            $('#upload_press_son' + progress_index).html(per + '%');
+                            $('#upload_press_son' + progress_index).css('width', per + '%');
+                        }
+                        var xhr = $.ajaxSettings.xhr();
+                        if (xhr.upload) {
+                            xhr.upload.addEventListener("progress", onprogress, false);
+                            return xhr;
+                        }
+                    }
+                }).done(function (res) {
+                    // alert(res);
+                    // document.location = ''; //刷新页面
+                    console.log("update done " + upOkCount);
+                    upOkCount += 1;
+                    $('#upload_press_son' + progress_index).html(res);
+                    if (upOkCount >= $('#file')[0].files.length) {
+                        // $('#upload').show();
+                        document.location = ''; //刷新页面
+                    } else {
+                        toUpload(upCount, progress_index);
+                    }
+                }).fail(function (res) {
+                    // $('#upload_press_parent<%= i %>').hide();
+                    // alert('上传失败');
+                    console.log("update fail " + upOkCount);
+                    upOkCount += 1;
+                    $('#upload_press_son' + progress_index).html('上传失败');
+                    if (upOkCount >= $('#file')[0].files.length) {
+                        // $('#upload').show();
+                        document.location = ''; //刷新页面
+                    } else {
+                        toUpload(upCount, progress_index);
+                    }
+                });
+            }
+        }
+
+        (function onLoad() {
+            console.log('####################################\n' + 
+                        '#  @@@@@@@ @     @  @@@@@  @     @ #\n' + 
+                        '# @         @   @     @    @@    @ #\n' + 
+                        '# @          @ @      @    @ @   @ #\n' + 
+                        '# @           @       @    @  @  @ #\n' + 
+                        '# @   @@@@   @ @      @    @   @ @ #\n' + 
+                        '# @      @  @   @     @    @    @@ #\n' + 
+                        '#  @@@@@@@ @     @  @@@@@  @     @ #\n' + 
+                        '####################################');
+
+            <% if(admin) { %>
+                $.get('/files/getbulk?path=' + TH_PATH
+                    , function(data, status) {
+                        if(status == 'success' && data != '') {
+                            $('p#countp').html('共 <%= fileInfos.length %> 项 (' + data + ')');
+                        }
+                    }
+                );
+            <% } %>
+
+            <% if(admin || conf.upload) { %>
+            $('#upframe').hide();
+            <% for(var i = 0; i < UPLOAD_COUNT; i++) { %>
+            $('#upload_press_parent<%= i %>').hide();
+            <% } %>
+
+            $('#upbtn').on('click', function() {
+                if(upCount == 0) {
+                    $('#upframe').toggle();
+                    <% for(var i = 0; i < UPLOAD_COUNT; i++) { %>
+                    $('#upload_press_parent<%= i %>').hide();
+                    <% } %>
+                }
+            });
+            
+            $('#upload').on('click', function() {
+                upCount = 0;
+                upOkCount = 0;
+                <% for(var i = 0; i < UPLOAD_COUNT; i++) { %>
+                toUpload(<%= i %>, <%= i %>);
+                <% } %>
+            });
+            <% } %>
+
+            <% if(admin || conf.mkdir) { %>
+            $('#mkdirdiv').on('click', function() {
+                var dirname = prompt("目录名");
+                if(!dirname || dirname == '')
+                    return;
+                var url = encodeURI('/files/mkdir?dirname=' + TH_PATH + '/' + dirname);
+                $.get(url, function(data, status) {
+                    if(status == 'success') {
+                        if (data != '目录创建成功') {
+                            alert(data);
+                        }
+                        document.location = ''; //刷新页面
+                    }
+                });
+            });
+            <% } %>
+
+            $('#getadmin').css('cursor', 'pointer');
+            $('#getadmin').on('click', function() {
+                <% if(!admin) { %>
+                var login = function() {
+                    $.post(
+                        '/files/adminlogin',
+                        {passwd: $('#adminpwd').val()},
+                        function(data, status) {
+                            document.location = ''; //刷新页面
+                        }
+                    );
+                };
+                $('#endarea').html('输入管理员密码: <input id="adminpwd" type="password"/><button id="pwdbtn" type="button">确定</button>');
+                $('#pwdbtn').on('click', function() {
+                    login();
+                });
+                $('#adminpwd').keypress(function(event) {
+                    if(event.keyCode == 13) {
+                        login();
+                    }
+                });
+                <% } else { %>
+                $.get(
+                    '/files/adminlogout',
+                    "",
+                    function(data, status) {
+                        document.location = ''; //刷新页面
+                    }
+                );
+                <% } %>
+            });
+
+            <% if(admin) { %>
+            <% for(var i=0; i<fileInfos.length; i++) { var info = fileInfos[i]; %>
+                $('#arename<%= i %>').css('cursor', 'pointer');
+                $('#arename<%= i %>').on('click', function() {
+                    var newName = prompt('新名字', '<%= info.name %>');
+                    if(newName && newName != '')
+                        document.location = encodeURI('<%= info.renamePath %>'.split('amp;').join('') + newName);
+                });
+            <% } %>
+
+            <% for(var i=0; i<fileInfos.length; i++) { var info = fileInfos[i]; %>
+                $('#aremove<%= i %>').css('cursor', 'pointer');
+                $('#aremove<%= i %>').on('click', function() {
+                    if(confirm('确认删除"<%= info.name %>"？')) {
+                        document.location = encodeURI('<%= info.delPath %>'.split('amp;').join(''));
+                    }
+                });
+            <% } %>
+            <% } %>
+        })();
+    </script>
+</body>
+
+</html>

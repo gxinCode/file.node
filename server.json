@@ -1,0 +1,8 @@
+{
+    "path": "public/files/",
+    "upload": true,
+    "mkdir": true,
+    "animPwd": "000000",
+    "preview": true,
+    "thumbSize": 1024
+}
