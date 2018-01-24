@@ -23,7 +23,7 @@
             var temp = '/';
             for(var k = 0; k < spstr.length; k++) {
                 var ts = spstr[k];
-                if(ts == '')
+                if(ts === '')
                     continue;
                 temp += ts + '/';%>
             / <a href="/files?dir=<%= temp %>"><%= ts %></a>
@@ -182,7 +182,7 @@
             <% if(admin) { %>
                 $.get('/files/getbulk?path=' + TH_PATH
                     , function(data, status) {
-                        if(status == 'success' && data != '') {
+                        if(status === 'success' && data !== '') {
                             $('p#countp').html('共 <%= fileInfos.length %> 项 (' + data + ')');
                         }
                     }
@@ -196,7 +196,7 @@
             <% } %>
 
             $('#upbtn').on('click', function() {
-                if(upCount == 0) {
+                if(upCount === 0) {
                     $('#upframe').toggle();
                     <% for(var i = 0; i < UPLOAD_COUNT; i++) { %>
                     $('#upload_press_parent<%= i %>').hide();
@@ -216,12 +216,12 @@
             <% if(admin || conf.mkdir) { %>
             $('#mkdirdiv').on('click', function() {
                 var dirname = prompt("目录名");
-                if(!dirname || dirname == '')
+                if(!dirname || dirname === '')
                     return;
                 var url = encodeURI('/files/mkdir?dirname=' + TH_PATH + '/' + dirname);
                 $.get(url, function(data, status) {
-                    if(status == 'success') {
-                        if (data != '目录创建成功') {
+                    if(status === 'success') {
+                        if (data !== '目录创建成功') {
                             alert(data);
                         }
                         document.location = ''; //刷新页面
@@ -247,7 +247,7 @@
                     login();
                 });
                 $('#adminpwd').keypress(function(event) {
-                    if(event.keyCode == 13) {
+                    if(event.keyCode === 13) {
                         login();
                     }
                 });
@@ -267,7 +267,7 @@
                 $('#arename<%= i %>').css('cursor', 'pointer');
                 $('#arename<%= i %>').on('click', function() {
                     var newName = prompt('新名字', '<%= info.name %>');
-                    if(newName && newName != '')
+                    if(newName && newName !== '')
                         document.location = encodeURI('<%= info.renamePath %>'.split('amp;').join('') + newName);
                 });
             <% } %>

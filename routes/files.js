@@ -278,7 +278,7 @@ router.get('/getbulk', function(req, res, next) {
     dir = req.query.path;
   }
 
-  call_sh.exec('du -sh ' + path.join(FILE_PATH, dir), function(err, out) {
+  call_sh.exec('du -sh "' + path.join(FILE_PATH, dir) + '"', function(err, out) {
     if(err) {
       res.send('');
     } else {
