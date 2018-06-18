@@ -1,8 +1,9 @@
 {
     "path": "public/files/",
+    "upcache": "uploads/",
     "upload": true,
     "mkdir": true,
-    "animPwd": "000000",
+    "adnimPwd": "000000",
     "preview": true,
     "thumbSize": 1024
 }
