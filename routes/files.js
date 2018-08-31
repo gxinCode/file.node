@@ -1,15 +1,16 @@
-var express = require('express');
-var fs = require('fs');
-var path = require('path');
-var multer = require('multer'); //multer 实现上传文件
-var call_sh = require('child_process');
+const express = require('express');
+const fs = require('fs');
+const path = require('path');
+const multer = require('multer'); //multer 实现上传文件
+const call_sh = require('child_process');
+const qr = require('qr-image');
 
-var router = express.Router();
+const router = express.Router();
 
-var confFileName = 'server.json';
-var FILE_PATH = 'public/files/';
-var CACHE_PATH = 'uploads/';
-var CONF;
+let confFileName = 'server.json';
+let FILE_PATH = 'public/files/';
+let CACHE_PATH = 'uploads/';
+let CONF;
 if (fs.existsSync(confFileName)) {
     CONF = JSON.parse(fs.readFileSync(confFileName, 'utf8'));
     console.log(JSON.stringify(CONF));
@@ -21,7 +22,7 @@ if (fs.existsSync(confFileName)) {
 console.log('files FILE_PATH = ' + FILE_PATH);
 
 router.get('/', function (req, res, next) {
-    var cDir = '';
+    let cDir = '';
     if (!req.query.dir) {
         console.log('default');
     } else {
@@ -29,9 +30,9 @@ router.get('/', function (req, res, next) {
     }
 
     //处理一下路径里多余的路径分隔符
-    var spDir = cDir.split('/');
+    let spDir = cDir.split('/');
     cDir = '/';
-    for (var k = 0; k < spDir.length; k++) {
+    for (let k = 0; k < spDir.length; k++) {
         if (spDir[k] !== '') {
             cDir += spDir[k] + '/';
         }
@@ -39,10 +40,10 @@ router.get('/', function (req, res, next) {
 
     //防止目录嗅探
     spDir = cDir.split('/');
-    var w = 0;
-    for (var k = 0; k < spDir.length; k++) {
+    let w = 0;
+    for (let k = 0; k < spDir.length; k++) {
         if (spDir[k] !== '') {
-            var t = spDir[k];
+            let t = spDir[k];
             if (t === '..') {
                 w--;
             } else if (t !== '.') {
@@ -56,25 +57,25 @@ router.get('/', function (req, res, next) {
         return;
     }
 
-    var tDir = FILE_PATH + cDir;
+    let tDir = FILE_PATH + cDir;
     fs.readdir(tDir, function (err, files) {
         if (err) {
             console.log(err);
             res.render('error_info', {title: "错误", message: '未找到目录："' + cDir + '"'});
             return;
         }
-        var dataDir = [];
-        var dataFile = [];
-        for (var i = 0; i < files.length; i++) {
+        let dataDir = [];
+        let dataFile = [];
+        for (let i = 0; i < files.length; i++) {
             if (!req.session.adnimStatus && files[i].startsWith(".", 0))
                 continue;
-            var st = fs.statSync(tDir + files[i]);
-            var iconImg = '/images/img_file.png';
-            var path;
-            var sizeStr = '';
-            var delPath = "/files/edit?type=del&path=" + cDir + files[i] +
+            let st = fs.statSync(tDir + files[i]);
+            let iconImg = '/images/img_file.png';
+            let path;
+            let sizeStr = '';
+            let delPath = "/files/edit?type=del&path=" + cDir + files[i] +
                 '&jump=' + (cDir === '' ? '/' : cDir);
-            var renamePath = "/files/edit?type=rename&path=" + cDir + files[i] +
+            let renamePath = "/files/edit?type=rename&path=" + cDir + files[i] +
                 '&jump=' + (cDir === '' ? '/' : cDir) + '&newname=';
             if (st.isDirectory()) {
                 iconImg = '/images/img_dir.png';
@@ -95,8 +96,8 @@ router.get('/', function (req, res, next) {
                     iconImg = encodeURI("/files/getfile?path=" + cDir + files[i]);
                 }
                 path = encodeURI("/files/getfile?path=" + cDir + files[i]);
-                var fh = 'B';
-                var sizet = st.size;
+                let fh = 'B';
+                let sizet = st.size;
                 if (sizet >= 1024) {
                     sizet /= 1024;
                     fh = 'KB';
@@ -117,16 +118,16 @@ router.get('/', function (req, res, next) {
                     icon: iconImg,
                     size: sizeStr,
                     delPath: delPath,
-                    renamePath: renamePath
+                    renamePath: renamePath,
                 });
             }
         }
 
-        var data = [];
-        for (var i = 0; i < dataDir.length; i++) {
+        let data = [];
+        for (let i = 0; i < dataDir.length; i++) {
             data.push(dataDir[i]);
         }
-        for (var i = 0; i < dataFile.length; i++) {
+        for (let i = 0; i < dataFile.length; i++) {
             data.push(dataFile[i]);
         }
 
@@ -143,13 +144,13 @@ router.get('/', function (req, res, next) {
 // 拿文件
 router.get('/getfile', function (req, res, next) {
     console.log('getfile: ' + req.query.path);
-    var filePath = path.join(FILE_PATH, req.query.path);
+    let filePath = path.join(FILE_PATH, req.query.path);
     fs.exists(filePath, function (exists) {
         if (exists) {
             fs.stat(filePath, function (err, stats) {
                 if (stats.isFile()) {
-                    var fi = filePath.lastIndexOf('/');
-                    var fileName = '';
+                    let fi = filePath.lastIndexOf('/');
+                    let fileName = '';
                     if (fi >= 0) {
                         fileName = filePath.substr(fi + 1, filePath.length);
                     }
@@ -167,7 +168,7 @@ router.get('/getfile', function (req, res, next) {
 });
 
 // dest 存储目录；fileUpload 要和表单中file的name匹配
-var upload = multer({dest: CACHE_PATH}).single('file');
+let upload = multer({dest: CACHE_PATH}).single('file');
 
 // 上传文件
 router.post('/upload', function (req, res, next) {
@@ -183,14 +184,14 @@ router.post('/upload', function (req, res, next) {
             res.send('上传失败');
             return;
         }
-        var savePath = req.body.path;
-        var fileName = req.file.filename;
-        var upName = req.file.originalname.split('&').join('');
+        let savePath = req.body.path;
+        let fileName = req.file.filename;
+        let upName = req.file.originalname.split('&').join('');
         if (upName === '' || upName.startsWith('.')) {
             upName = fileName + upName;
         }
-        var oldPath = path.join(CACHE_PATH, fileName);
-        var newPath = path.join(FILE_PATH, savePath, upName);
+        let oldPath = path.join(CACHE_PATH, fileName);
+        let newPath = path.join(FILE_PATH, savePath, upName);
         console.log('upload file:');
         console.log('\toldPath: ' + oldPath);
         console.log('\tnewPath: ' + newPath);
@@ -220,7 +221,7 @@ router.get('/mkdir', function (req, res, next) {
     if (!req.query.dirname) {
         res.send('参数错误');
     } else {
-        var dirPath = path.join(FILE_PATH, req.query.dirname.split('&').join(''));
+        let dirPath = path.join(FILE_PATH, req.query.dirname.split('&').join(''));
         console.log('mkdir: ' + dirPath);
         if (dirPath === '') {
             res.send('目录创建失败');
@@ -244,7 +245,7 @@ router.get('/mkdir', function (req, res, next) {
 
 // 管理员验证
 router.post('/adminlogin', function (req, res, next) {
-    var pwd = req.body.passwd;
+    let pwd = req.body.passwd;
     if (pwd && pwd === CONF.adnimPwd) {
         req.session.adnimStatus = true;
         console.log('adnimlogin success');
@@ -263,7 +264,7 @@ router.get('/edit', function (req, res, next) {
         return;
     }
     if (req.query.type) {
-        var type = req.query.type;
+        let type = req.query.type;
         if (type === 'del') {
             deleteFileDir(req, res);
         } else if (type === 'rename') {
@@ -282,7 +283,7 @@ router.get('/getbulk', function (req, res, next) {
         return;
     }
 
-    var dir = '';
+    let dir = '';
     if (req.query.path) {
         dir = req.query.path;
     }
@@ -296,11 +297,21 @@ router.get('/getbulk', function (req, res, next) {
     });
 });
 
+router.get('/qr', function (req, res, next) {
+    let path = '';
+    if (req.query.path) {
+        path = req.query.path;
+    }
+
+    let code = qr.image(path, { type: 'png' });
+    code.pipe(res);
+});
+
 // functions
-var ImgSuffixs = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+let ImgSuffixs = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
 
 function isImage(name) {
-    for (var i = 0; i < ImgSuffixs.length; i++) {
+    for (let i = 0; i < ImgSuffixs.length; i++) {
         if (name.toLowerCase().endsWith(ImgSuffixs[i]))
             return true;
     }
@@ -311,8 +322,8 @@ function deleteFileDir(req, res) {
     if (!req.query.path) {
         res.render('error_info', {title: "错误", message: '不正确的参数'});
     } else {
-        var filePath = path.join(FILE_PATH, req.query.path);
-        var fileState = fs.statSync(filePath);
+        let filePath = path.join(FILE_PATH, req.query.path);
+        let fileState = fs.statSync(filePath);
         if (fileState.isFile()) {
             fs.unlink(filePath, function (err) {
                 if (err) {
@@ -351,11 +362,11 @@ function renameFile(req, res) {
     if (!req.query.path || !req.query.newname || !req.query.jump) {
         res.render('error_info', {title: "错误", message: '不正确的参数' + JSON.stringify(req.query)});
     } else {
-        var filePath = path.join(FILE_PATH, req.query.path);
-        // var fileState = fs.statSync(filePath);
-        var newName = req.query.newname;
-        var cdir = req.query.jump;
-        var newPath = path.join(FILE_PATH, cdir, newName);
+        let filePath = path.join(FILE_PATH, req.query.path);
+        // let fileState = fs.statSync(filePath);
+        let newName = req.query.newname;
+        let cdir = req.query.jump;
+        let newPath = path.join(FILE_PATH, cdir, newName);
         if (newName === '') {
             res.render('error_info', {title: "错误", message: '新名字不能为空'});
         } else {

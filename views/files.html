@@ -61,6 +61,7 @@
             <th width="50px">类型</th>
             <th>文件名</th>
             <th width="120px">大小</th>
+            <th width="100px">功能</th>
             <% if(admin) { %>
             <th width="150px">管理</th>
             <% } %>
@@ -72,11 +73,12 @@
                     <img width="32px" height="32px" src="<%= info.icon %>"/>
                 </td>
                 <td>
-                    <a href="<%= info.path %>">
+                    <a id="fname<%= i %>" href="<%= info.path %>">
                         <%= info.name %>
                     </a>
                 </td>
                 <td align="right"><%= info.size %></td>
+                <td align="center"> <a id="qrcode<%= i %>">二维码</a> </td>
                 <% if(admin) { %>
                 <td>
                     <a id="aremove<%= i %>">
@@ -261,6 +263,16 @@
                 );
                 <% } %>
             });
+
+            <% for(var i=0; i<fileInfos.length; i++) { var info = fileInfos[i]; %>
+                $('#qrcode<%= i %>').css('cursor', 'pointer');
+                $('#qrcode<%= i %>').on('click', function() {
+                    let path = $('#fname<%= i %>').attr('href');
+                    let fileUrl = window.location.protocol + '//' + window.location.host + path;
+                    document.location = "/files/qr?path=" + encodeURI(fileUrl);
+                });
+            <% } %>
+
 
             <% if(admin) { %>
             <% for(var i=0; i<fileInfos.length; i++) { var info = fileInfos[i]; %>
